@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-box">
+        <h1>🧪 API Connection Diagnostic Tool</h1>
+        <p>This page will help diagnose your API connection issue.</p>
+        
+        <h3>Test 1: DNS Resolution</h3>
+        <button onclick="testDNS()">Test DNS Lookup</button>
+        <div id="dns-result"></div>
+
+        <h3>Test 2: API Endpoint Reachability</h3>
+        <button onclick="testPing()">Ping API Endpoint</button>
+        <div id="ping-result"></div>
+
+        <h3>Test 3: CORS Preflight</h3>
+        <button onclick="testCORS()">Test CORS</button>
+        <div id="cors-result"></div>
+
+        <h3>Test 4: Full API Request</h3>
+        <button onclick="testAPI()">Send Test Order</button>
+        <div id="api-result"></div>
+
+        <h3>Test 5: Alternative Endpoint</h3>
+        <p>Try using the S3 website endpoint instead:</p>
+        <a href="http://ecommerce-order-system-website-914261932225.s3-website-us-east-1.amazonaws.com" target="_blank">
+            <button>Open S3 Direct URL</button>
+        </a>
+    </div>
+
+    <script>
+        const API_URL = 'https://9r769iupu4.execute-api.us-east-1.amazonaws.com/prod/orders';
+
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+
+        async function testDNS() {
+            showResult('dns-result', '🔍 Testing DNS resolution...', 'info');
+            
+            try {
+                const response = await fetch('https://dns.google/resolve?name=9r769iupu4.execute-api.us-east-1.amazonaws.com&type=A');
+                const data = await response.json();
+                
+                if (data.Answer && data.Answer.length > 0) {
+                    const ips = data.Answer.map(a => a.data).join(', ');
+                    showResult('dns-result', `✅ DNS Resolution Successful!\nIP Addresses: ${ips}`, 'success');
+                } else {
+                    showResult('dns-result', '❌ DNS Resolution Failed\nNo IP addresses found for this domain.', 'error');
+                }
+            } catch (error) {
+                showResult('dns-result', `❌ DNS Test Failed\nError: ${error.message}`, 'error');
+            }
+        }
+
+        async function testPing() {
+            showResult('ping-result', '🔍 Testing API endpoint reachability...', 'info');
+            
+            const startTime = Date.now();
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'OPTIONS',
+                    mode: 'no-cors'
+                });
+                const endTime = Date.now();
+                const latency = endTime - startTime;
+                
+                showResult('ping-result', `✅ Endpoint is reachable!\nLatency: ${latency}ms`, 'success');
+            } catch (error) {
+                showResult('ping-result', `❌ Cannot reach endpoint\nError: ${error.message}\n\nThis suggests a network/DNS issue on your side.`, 'error');
+            }
+        }
+
+        async function testCORS() {
+            showResult('cors-result', '🔍 Testing CORS preflight...', 'info');
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+                
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers')
+                };
+                
+                showResult('cors-result', `✅ CORS Preflight Successful!\n${JSON.stringify(corsHeaders, null, 2)}`, 'success');
+            } catch (error) {
+                showResult('cors-result', `❌ CORS Test Failed\nError: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAPI() {
+            showResult('api-result', '🔍 Sending test order to API...', 'info');
+            
+            const testOrder = {
+                customerName: 'Diagnostic Test',
+                items: [{name: 'Test Product', price: 99.99}],
+                totalAmount: 99.99
+            };
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testOrder)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('api-result', `🎉 SUCCESS! Order placed!\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult('api-result', `⚠️ API returned an error\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult('api-result', `❌ API Request Failed\nError: ${error.message}\n\nLikely causes:\n1. DNS cannot resolve the domain\n2. Network firewall blocking AWS\n3. ISP DNS issues\n\nThe API itself works (verified in AWS Console).`, 'error');
+            }
+        }
+
+        // Auto-run DNS test on page load
+        window.onload = () => {
+            testDNS();
+        };
+    </script>
+</body>
+</html>

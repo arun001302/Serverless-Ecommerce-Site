@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serverless E-Commerce Store</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛒 Serverless E-Commerce Store</h1>
+            <p>Powered by AWS Lambda, API Gateway & DynamoDB</p>
+        </header>
+
+        <div class="products">
+            <div class="product-card">
+                <div class="product-image">📱</div>
+                <h3>Smartphone X</h3>
+                <p class="description">Latest model with amazing features</p>
+                <p class="price">$899.99</p>
+                <button onclick="addToCart('Smartphone X', 899.99)">Add to Cart</button>
+            </div>
+
+            <div class="product-card">
+                <div class="product-image">💻</div>
+                <h3>Laptop Pro</h3>
+                <p class="description">High performance for professionals</p>
+                <p class="price">$1,299.99</p>
+                <button onclick="addToCart('Laptop Pro', 1299.99)">Add to Cart</button>
+            </div>
+
+            <div class="product-card">
+                <div class="product-image">🎧</div>
+                <h3>Wireless Headphones</h3>
+                <p class="description">Premium sound quality</p>
+                <p class="price">$249.99</p>
+                <button onclick="addToCart('Wireless Headphones', 249.99)">Add to Cart</button>
+            </div>
+
+            <div class="product-card">
+                <div class="product-image">⌚</div>
+                <h3>Smart Watch</h3>
+                <p class="description">Track your fitness goals</p>
+                <p class="price">$399.99</p>
+                <button onclick="addToCart('Smart Watch', 399.99)">Add to Cart</button>
+            </div>
+        </div>
+
+        <div class="cart">
+            <h2>🛍️ Shopping Cart</h2>
+            <div id="cart-items"></div>
+            <div id="cart-total"></div>
+            
+            <div class="checkout-form">
+                <h3>Checkout</h3>
+                <input type="text" id="customerName" placeholder="Your Name" required>
+                <button id="placeOrderBtn" onclick="placeOrder()">Place Order</button>
+            </div>
+        </div>
+
+        <div id="message" class="message"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
