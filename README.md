@@ -61,7 +61,7 @@ AWS WAF (Security Layer)
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/YOUR-USERNAME/Serverless-Ecommerce-Site.git
+git clone https://github.com/arun001302/Serverless-Ecommerce-Site.git
 cd Serverless-Ecommerce-Site
 ```
 
@@ -295,4 +295,5 @@ Ideas for v2.0:
 This project is open source and available under the MIT License.
 
 *Last Updated: October 2025*
+
 
