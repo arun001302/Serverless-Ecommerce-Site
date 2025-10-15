@@ -290,31 +290,9 @@ Ideas for v2.0:
 - [ ] Search functionality
 - [ ] Real-time updates with WebSockets (API Gateway)
 
-## 🤝 Contributing
-
-This is a learning project, but suggestions are welcome! Feel free to:
-- Open issues for bugs
-- Suggest improvements
-- Fork and enhance
-
 ## 📝 License
 
 This project is open source and available under the MIT License.
 
-## 🙏 Acknowledgments
-
-- AWS Documentation for comprehensive guides
-- CloudFormation best practices
-- The AWS Free Tier for making learning affordable
-
-## 📞 Contact
-
-- GitHub: [@YOUR-USERNAME](https://github.com/YOUR-USERNAME)
-- Project Link: [https://github.com/YOUR-USERNAME/Serverless-Ecommerce-Site](https://github.com/YOUR-USERNAME/Serverless-Ecommerce-Site)
-
----
-
-**Built with ☁️ AWS and 💪 determination**
-
-
 *Last Updated: October 2025*
+
