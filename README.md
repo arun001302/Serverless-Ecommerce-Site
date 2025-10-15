@@ -290,20 +290,6 @@ Ideas for v2.0:
 - [ ] Search functionality
 - [ ] Real-time updates with WebSockets (API Gateway)
 
-## 📸 Screenshots
-
-### Website Interface
-![Shopping Cart](docs/screenshots/website.png)
-
-### Successful Order
-![Order Success](docs/screenshots/success.png)
-
-### DynamoDB Orders
-![DynamoDB Table](docs/screenshots/dynamodb.png)
-
-### CloudFormation Stack
-![Stack Complete](docs/screenshots/cloudformation.png)
-
 ## 🤝 Contributing
 
 This is a learning project, but suggestions are welcome! Feel free to:
@@ -329,5 +315,6 @@ This project is open source and available under the MIT License.
 ---
 
 **Built with ☁️ AWS and 💪 determination**
+
 
 *Last Updated: October 2025*
