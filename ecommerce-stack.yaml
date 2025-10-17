@@ -245,7 +245,7 @@ Resources:
     Type: AWS::ApiGateway::DomainName
     Properties:
       DomainName: api.architecture-demo.com
-      RegionalCertificateArn: arn:aws:acm:us-east-1:914261932225:certificate/514ef4cb-ff86-4394-8f50-098c1ba3593f
+      RegionalCertificateArn: arn:aws:acm:us-east-1:914261932225:certificate/4aed2e2e-b84b-4de8-acfb-17cf15843aaa
       EndpointConfiguration:
         Types:
           - REGIONAL
