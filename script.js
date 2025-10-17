@@ -1,5 +1,5 @@
-// Your Lambda Function URL (bypasses API Gateway DNS issues)
-const API_ENDPOINT = 'https://fwgkx7pfrnussicu67szho3xua0jssyp.lambda-url.us-east-1.on.aws/';
+// Custom domain API endpoint
+const API_ENDPOINT = 'https://api.architecture-demo.com/orders';
 
 // Shopping cart array
 let cart = [];
@@ -75,7 +75,7 @@ async function placeOrder() {
     btn.textContent = '⏳ Processing...';
     
     try {
-        // Send POST request to Lambda Function URL
+        // Send POST request to custom domain API
         const response = await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: {

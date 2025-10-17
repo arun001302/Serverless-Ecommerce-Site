@@ -14,7 +14,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub '${ProjectName}-orders'
-      BillingMode: PAY_PER_REQUEST  # No need to manage capacity
+      BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: orderId
           AttributeType: S
@@ -42,7 +42,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole 
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: DynamoDBAccess
           PolicyDocument:
@@ -56,7 +56,7 @@ Resources:
                   - dynamodb:Scan
                 Resource: !GetAtt OrdersTable.Arn
 
-# Lambda function to process orders (with Function URL)
+# Lambda function to process orders
   ProcessOrderFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -74,6 +74,7 @@ Resources:
           import os
           from datetime import datetime
           import uuid
+          from decimal import Decimal
 
           dynamodb = boto3.resource('dynamodb')
           table = dynamodb.Table(os.environ['TABLE_NAME'])
@@ -109,17 +110,32 @@ Resources:
                   
                   print(f"Parsed body: {json.dumps(body)}")
                   
+                  # Convert float values to Decimal for DynamoDB
+                  def convert_floats(obj):
+                      if isinstance(obj, list):
+                          return [convert_floats(item) for item in obj]
+                      elif isinstance(obj, dict):
+                          return {key: convert_floats(value) for key, value in obj.items()}
+                      elif isinstance(obj, float):
+                          return Decimal(str(obj))
+                      else:
+                          return obj
+                  
+                  # Convert items and totalAmount to Decimal
+                  items_converted = convert_floats(body.get('items', []))
+                  total_converted = Decimal(str(body.get('totalAmount', 0)))
+                  
                   # Create order record
                   order = {
                       'orderId': str(uuid.uuid4()),
                       'timestamp': int(datetime.now().timestamp()),
                       'customerName': body.get('customerName'),
-                      'items': body.get('items'),
-                      'totalAmount': str(body.get('totalAmount')),  # DynamoDB compatibility
+                      'items': items_converted,
+                      'totalAmount': total_converted,
                       'status': 'pending'
                   }
                   
-                  print(f"Order to save: {json.dumps(order)}")
+                  print(f"Order to save: {order}")
                   
                   # Save to DynamoDB
                   table.put_item(Item=order)
@@ -149,7 +165,7 @@ Resources:
                   }
 
   
- # REST API Gateway
+# REST API Gateway
   OrderAPI:
     Type: AWS::ApiGateway::RestApi
     Properties:
@@ -224,6 +240,38 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${OrderAPI}/*/*'
 
+  # Custom Domain Name for API Gateway
+  APICustomDomain:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: api.architecture-demo.com
+      RegionalCertificateArn: arn:aws:acm:us-east-1:914261932225:certificate/514ef4cb-ff86-4394-8f50-098c1ba3593f
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      SecurityPolicy: TLS_1_2
+
+  # Map Custom Domain to API Gateway
+  APIBasePathMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn: APIDeployment
+    Properties:
+      DomainName: !Ref APICustomDomain
+      RestApiId: !Ref OrderAPI
+      Stage: prod
+
+  # Route 53 Record for API subdomain
+  APIRoute53Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: Z01144622GJU2X257MHX7
+      Name: api.architecture-demo.com
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt APICustomDomain.RegionalDomainName
+        HostedZoneId: !GetAtt APICustomDomain.RegionalHostedZoneId
+        EvaluateTargetHealth: false
+
 # S3 Bucket for hosting the website
   WebsiteBucket:
     Type: AWS::S3::Bucket
@@ -241,14 +289,14 @@ Resources:
         - Key: Project
           Value: !Ref ProjectName
 
-  # CloudFront Origin Access Identity (for secure S3 access)
+  # CloudFront Origin Access Identity
   CloudFrontOAI:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
         Comment: !Sub 'OAI for ${ProjectName}'
 
-  # S3 Bucket Policy - Combined (CloudFront + Public Access)
+  # S3 Bucket Policy
   WebsiteBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -268,7 +316,7 @@ Resources:
             Action: s3:GetObject
             Resource: !Sub '${WebsiteBucket.Arn}/*'
 
- # CloudFront Distribution
+# CloudFront Distribution
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -308,17 +356,16 @@ Resources:
             ResponseCode: 200
             ResponsePagePath: /index.html 
 
-# WAF Web ACL with Managed Rule Groups
+# WAF Web ACL for CloudFront
   WebACL:
     Type: AWS::WAFv2::WebACL
     Properties:
       Name: !Sub '${ProjectName}-waf'
       Scope: CLOUDFRONT
-      Description: WAF to protect CloudFront and API Gateway
+      Description: WAF to protect CloudFront
       DefaultAction:
         Allow: {}
       Rules:
-        # AWS Managed Rule - Core Rule Set (protects against OWASP top 10)
         - Name: AWSManagedRulesCommonRuleSet
           Priority: 1
           OverrideAction:
@@ -332,7 +379,6 @@ Resources:
             CloudWatchMetricsEnabled: true
             MetricName: AWSManagedRulesCommonRuleSetMetric
         
-        # AWS Managed Rule - Known Bad Inputs
         - Name: AWSManagedRulesKnownBadInputsRuleSet
           Priority: 2
           OverrideAction:
@@ -346,7 +392,6 @@ Resources:
             CloudWatchMetricsEnabled: true
             MetricName: AWSManagedRulesKnownBadInputsRuleSetMetric
         
-        # AWS Managed Rule - SQL Injection Protection
         - Name: AWSManagedRulesSQLiRuleSet
           Priority: 3
           OverrideAction:
@@ -367,7 +412,7 @@ Resources:
         - Key: Project
           Value: !Ref ProjectName
 
-  # WAF for API Gateway (Regional)
+  # WAF for API Gateway
   APIGatewayWebACL:
     Type: AWS::WAFv2::WebACL
     Properties:
@@ -423,10 +468,16 @@ Outputs:
       Name: !Sub '${ProjectName}-website-url'
 
   APIEndpoint:
-    Description: API Gateway endpoint URL
+    Description: API Gateway endpoint URL (auto-generated)
     Value: !Sub 'https://${OrderAPI}.execute-api.${AWS::Region}.amazonaws.com/prod/orders'
     Export:
       Name: !Sub '${ProjectName}-api-endpoint'
+
+  CustomAPIEndpoint:
+    Description: Custom domain API endpoint URL
+    Value: https://api.architecture-demo.com/orders
+    Export:
+      Name: !Sub '${ProjectName}-custom-api-endpoint'
 
   S3BucketName:
     Description: S3 Bucket name for uploading website files
@@ -439,4 +490,3 @@ Outputs:
     Value: !Ref OrdersTable
     Export:
       Name: !Sub '${ProjectName}-table-name'
-
