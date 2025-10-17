@@ -214,16 +214,3 @@ Or via Console:
 ## 📝 License
 
 This project is open source and available under the MIT License.
-
-## 🤝 Contributing
-
-Pull requests are welcome! Feel free to fork this project and submit improvements.
-
-## 📧 Contact
-
-For questions or feedback, please open an issue in this repository.
-
----
-
-**Built as part of AWS Cloud Bootcamp Project** ☁️
-
